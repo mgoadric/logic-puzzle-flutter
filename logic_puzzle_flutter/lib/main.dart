@@ -107,29 +107,30 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                       mainAxisSpacing: 20),
                   itemCount: myProducts.length,
                   itemBuilder: (BuildContext ctx, index) {
+                    int x = myProducts[index]["id"];
                     return Draggable<int>(
                       // Data is the value this Draggable stores.
-                      data: myProducts[index]["id"],
-                      feedback: Container(
+                      data: x,
+                      childWhenDragging: Container(
                         color: Colors.deepOrange,
                         height: 100,
                         width: 100,
                         child: const Icon(Icons.directions_run),
                       ),
-                      childWhenDragging: Container(
+                      feedback: Container(
                         height: 100.0,
                         width: 100.0,
                         color: Colors.pinkAccent,
-                        child: const Center(
-                          child: Text('Child When Dragging'),
+                        child: Center(
+                          child: Text('$x'),
                         ),
                       ),
                       child: Container(
                         height: 100.0,
                         width: 100.0,
                         color: Colors.lightGreenAccent,
-                        child: const Center(
-                          child: Text('Draggable'),
+                        child: Center(
+                          child: Text('$x'),
                         ),
                       ),
                     );
