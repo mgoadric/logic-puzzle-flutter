@@ -32,22 +32,53 @@ enum LogicPattern { dots, crosshatch, stripes, none }
 enum LogicColor { green, yellow, red, grey }
 
 class LogicBubble {
-  Color bgcolor;
-  Color pcolor;
-  LogicPattern pattern;
-  LogicShape shape;
-  int x;
-  int y;
-  int radius;
+  final Color bgcolor;
+  final Color pcolor;
+  final LogicPattern pattern;
+  final LogicShape shape;
 
   LogicBubble(
       {this.bgcolor = Colors.grey,
       this.pcolor = Colors.white,
       this.pattern = LogicPattern.none,
-      this.shape = LogicShape.cloud,
-      required this.x,
-      required this.y,
-      required this.radius});
+      this.shape = LogicShape.cloud});
+}
+
+class MyWidget extends StatelessWidget {
+  const MyWidget({Key? key, required this.bubble}) : super(key: key);
+
+  final LogicBubble bubble;
+
+  @override
+  Widget build(BuildContext context) {
+    BoxShape boxShape = BoxShape.circle;
+
+    if (bubble.shape == LogicShape.square) {
+      boxShape = BoxShape.rectangle;
+    }
+
+    return Draggable<LogicBubble>(
+      // Data is the value this Draggable stores.
+      data: bubble,
+
+      feedback: Container(
+        height: 100.0,
+        width: 100.0,
+        color: Colors.pinkAccent,
+        child: Center(
+          child: Text('a'),
+        ),
+      ),
+      child: Container(
+        height: 100.0,
+        width: 100.0,
+        decoration: BoxDecoration(color: Colors.orange, shape: boxShape),
+        child: Center(
+          child: Text('a'),
+        ),
+      ),
+    );
+  }
 }
 
 class MyStatefulWidget extends StatefulWidget {
@@ -58,33 +89,10 @@ class MyStatefulWidget extends StatefulWidget {
 }
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-  int acceptedData = 0;
+  int acceptedData1 = 0;
+  int acceptedData2 = 0;
 
-  final List<Map> myProducts =
-      List.generate(300, (index) => {"id": index, "name": "Product $index"})
-          .toList();
-
-  var dtarget = DragTarget<int>(
-    builder: (
-      BuildContext context,
-      List<dynamic> accepted,
-      List<dynamic> rejected,
-    ) {
-      return Container(
-        height: 100.0,
-        width: 100.0,
-        color: Colors.cyan,
-        child: Center(
-          child: Text('Value is updated to: '),
-        ),
-      );
-    },
-    onAccept: (int data) {
-      //setState(() {
-      //  acceptedData += data;
-      //});
-    },
-  );
+  List<int> myProducts = List.generate(27, (index) => index).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -101,34 +109,45 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 50,
+                      maxCrossAxisExtent: 60,
                       childAspectRatio: 3 / 2,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20),
                   itemCount: myProducts.length,
                   itemBuilder: (BuildContext ctx, index) {
-                    int x = myProducts[index]["id"];
+                    int x = myProducts[index];
                     return Draggable<int>(
                       // Data is the value this Draggable stores.
                       data: x,
                       childWhenDragging: Container(
-                        color: Colors.deepOrange,
                         height: 100,
                         width: 100,
-                        child: const Icon(Icons.directions_run),
+                        child: null,
                       ),
                       feedback: Container(
-                        height: 100.0,
-                        width: 100.0,
-                        color: Colors.pinkAccent,
-                        child: Center(
-                          child: Text('$x'),
+                        height: 60.0,
+                        width: 60.0,
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey,
+                              offset: Offset(
+                                3.0,
+                                3.0,
+                              ),
+                              blurRadius: 3.0,
+                              spreadRadius: 1.0,
+                            ),
+                          ],
                         ),
                       ),
                       child: Container(
                         height: 100.0,
                         width: 100.0,
-                        color: Colors.lightGreenAccent,
+                        decoration: const BoxDecoration(
+                            color: Colors.orange, shape: BoxShape.circle),
                         child: Center(
                           child: Text('$x'),
                         ),
@@ -136,26 +155,54 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
                     );
                   }),
             ),
-            DragTarget<int>(
-              builder: (
-                BuildContext context,
-                List<dynamic> accepted,
-                List<dynamic> rejected,
-              ) {
-                return Container(
-                  height: 100.0,
-                  width: 100.0,
-                  color: Colors.cyan,
-                  child: Center(
-                    child: Text('Value is updated to: $acceptedData'),
-                  ),
-                );
-              },
-              onAccept: (int data) {
-                setState(() {
-                  acceptedData += data;
-                });
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                DragTarget<int>(
+                  builder: (
+                    BuildContext context,
+                    List<dynamic> accepted,
+                    List<dynamic> rejected,
+                  ) {
+                    return Container(
+                      height: 100.0,
+                      width: 100.0,
+                      color: Colors.cyan,
+                      child: Center(
+                        child: Text('Value is updated to: $acceptedData1'),
+                      ),
+                    );
+                  },
+                  onAccept: (int data) {
+                    setState(() {
+                      acceptedData1 += data;
+                      myProducts.remove(data);
+                    });
+                  },
+                ),
+                DragTarget<int>(
+                  builder: (
+                    BuildContext context,
+                    List<dynamic> accepted,
+                    List<dynamic> rejected,
+                  ) {
+                    return Container(
+                      height: 100.0,
+                      width: 100.0,
+                      color: Colors.cyan,
+                      child: Center(
+                        child: Text('Value is updated to: $acceptedData2'),
+                      ),
+                    );
+                  },
+                  onAccept: (int data) {
+                    setState(() {
+                      acceptedData2 += data;
+                      myProducts.remove(data);
+                    });
+                  },
+                ),
+              ],
             ),
           ],
         ));
