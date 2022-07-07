@@ -15,7 +15,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Logic Puzzle'),
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text("whatever"),
+        ),
+        body: const MyStatefulWidget(),
+      ),
     );
   }
 }
@@ -43,113 +48,115 @@ class LogicBubble {
       required this.x,
       required this.y,
       required this.radius});
-
-  draw(Canvas canvas, Size size) {
-    switch (shape) {
-      case LogicShape.circle:
-        pattern.paintOnCircle(canvas, size, Offset(size.width - 80, 90), 50);
-
-        // Right eye
-        canvas.drawCircle(
-          Offset(size.width - 80, 90),
-          50,
-          paint,
-        );
-        break;
-      default:
-    }
-  }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+class MyStatefulWidget extends StatefulWidget {
+  const MyStatefulWidget({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  int acceptedData = 0;
+
+  final List<Map> myProducts =
+      List.generate(300, (index) => {"id": index, "name": "Product $index"})
+          .toList();
+
+  var dtarget = DragTarget<int>(
+    builder: (
+      BuildContext context,
+      List<dynamic> accepted,
+      List<dynamic> rejected,
+    ) {
+      return Container(
+        height: 100.0,
+        width: 100.0,
+        color: Colors.cyan,
+        child: Center(
+          child: Text('Value is updated to: '),
+        ),
+      );
+    },
+    onAccept: (int data) {
+      //setState(() {
+      //  acceptedData += data;
+      //});
+    },
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-        color: Colors.white,
-        // Inner yellow container
-        child: LayoutBuilder(
-          // Inner yellow container
-          builder: (_, constraints) => Container(
-            width: constraints.widthConstraints().maxWidth,
-            height: constraints.heightConstraints().maxHeight,
-            color: Colors.yellow,
-            child: CustomPaint(painter: FaceOutlinePainter()),
-          ),
-        ),
-      ),
-    );
+    return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+              height:
+                  (MediaQuery.of(context).size.width - 20) * 2.0 / 2.0, //270.0,
+              child: GridView.builder(
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 50,
+                      childAspectRatio: 3 / 2,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20),
+                  itemCount: myProducts.length,
+                  itemBuilder: (BuildContext ctx, index) {
+                    return Draggable<int>(
+                      // Data is the value this Draggable stores.
+                      data: myProducts[index]["id"],
+                      feedback: Container(
+                        color: Colors.deepOrange,
+                        height: 100,
+                        width: 100,
+                        child: const Icon(Icons.directions_run),
+                      ),
+                      childWhenDragging: Container(
+                        height: 100.0,
+                        width: 100.0,
+                        color: Colors.pinkAccent,
+                        child: const Center(
+                          child: Text('Child When Dragging'),
+                        ),
+                      ),
+                      child: Container(
+                        height: 100.0,
+                        width: 100.0,
+                        color: Colors.lightGreenAccent,
+                        child: const Center(
+                          child: Text('Draggable'),
+                        ),
+                      ),
+                    );
+                  }),
+            ),
+            DragTarget<int>(
+              builder: (
+                BuildContext context,
+                List<dynamic> accepted,
+                List<dynamic> rejected,
+              ) {
+                return Container(
+                  height: 100.0,
+                  width: 100.0,
+                  color: Colors.cyan,
+                  child: Center(
+                    child: Text('Value is updated to: $acceptedData'),
+                  ),
+                );
+              },
+              onAccept: (int data) {
+                setState(() {
+                  acceptedData += data;
+                });
+              },
+            ),
+          ],
+        ));
   }
-}
-
-class FaceOutlinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Define a paint object
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..color = Colors.indigo;
-
-// Prepare a rectangle shape to draw the pattern on.
-    final rect = RRect.fromRectAndRadius(
-        const Rect.fromLTWH(20, 40, 100, 100), const Radius.circular(20));
-
-    // Create a Pattern object of diagonal stripes with the colors we want.
-    const Pattern pattern =
-        Dots(bgColor: Colors.lightGreenAccent, fgColor: Colors.black);
-
-    // Paint the pattern on the rectangle.
-    pattern.paintOnRRect(canvas, size, rect);
-    canvas.drawRRect(rect, paint);
-
-    final circ = Rect.fromLTWH(size.width - 120, 40, 100, 100);
-
-    pattern.paintOnCircle(canvas, size, Offset(size.width - 80, 90), 50);
-
-    // Right eye
-    canvas.drawCircle(
-      Offset(size.width - 80, 90),
-      50,
-      paint,
-    );
-    // Mouth
-    final mouth = Path();
-    mouth.moveTo(size.width * 0.8, size.height * 0.6);
-    mouth.arcToPoint(
-      Offset(size.width * 0.2, size.height * 0.6),
-      radius: Radius.circular(150),
-    );
-    mouth.arcToPoint(
-      Offset(size.width * 0.8, size.height * 0.6),
-      radius: Radius.circular(200),
-      clockwise: false,
-    );
-
-    canvas.drawPath(mouth, paint);
-
-    final path = Path();
-    path.moveTo(120, 200);
-    path.lineTo(300, 280);
-    path.lineTo(20, 400);
-    path.close();
-    Crosshatch(bgColor: Colors.orange, fgColor: Colors.black)
-        .paintOnPath(canvas, size, path);
-  }
-
-  @override
-  bool shouldRepaint(FaceOutlinePainter oldDelegate) => false;
 }
