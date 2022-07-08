@@ -89,10 +89,9 @@ class MyStatefulWidget extends StatefulWidget {
 }
 
 class _MyStatefulWidgetState extends State<MyStatefulWidget> {
-  int acceptedData1 = 0;
-  int acceptedData2 = 0;
-
-  List<int> myProducts = List.generate(27, (index) => index).toList();
+  List<int> initialList = List.generate(27, (index) => index).toList();
+  List<int> trueList = [];
+  List<int> falseList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -101,110 +100,117 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-              height:
-                  (MediaQuery.of(context).size.width - 20) * 2.0 / 2.0, //270.0,
-              child: GridView.builder(
-                  scrollDirection: Axis.vertical,
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 60,
-                      childAspectRatio: 3 / 2,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20),
-                  itemCount: myProducts.length,
-                  itemBuilder: (BuildContext ctx, index) {
-                    int x = myProducts[index];
-                    return Draggable<int>(
-                      // Data is the value this Draggable stores.
-                      data: x,
-                      childWhenDragging: Container(
-                        height: 100,
-                        width: 100,
-                        child: null,
-                      ),
-                      feedback: Container(
-                        height: 60.0,
-                        width: 60.0,
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey,
-                              offset: Offset(
-                                3.0,
-                                3.0,
-                              ),
-                              blurRadius: 3.0,
-                              spreadRadius: 1.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                      child: Container(
-                        height: 100.0,
-                        width: 100.0,
-                        decoration: const BoxDecoration(
-                            color: Colors.orange, shape: BoxShape.circle),
-                        child: Center(
-                          child: Text('$x'),
-                        ),
-                      ),
-                    );
-                  }),
+            DragList(myList: initialList),
+            DragTarget<int>(
+              builder: (
+                BuildContext context,
+                List<dynamic> accepted,
+                List<dynamic> rejected,
+              ) {
+                return DragList(myList: trueList);
+              },
+              onWillAccept: (data) {
+                return !trueList.contains(data);
+              },
+              onAccept: (data) {
+                setState(() {
+                  falseList.remove(data);
+                  initialList.remove(data);
+                  trueList.add(data);
+                });
+              },
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                DragTarget<int>(
-                  builder: (
-                    BuildContext context,
-                    List<dynamic> accepted,
-                    List<dynamic> rejected,
-                  ) {
-                    return Container(
-                      height: 100.0,
-                      width: 100.0,
-                      color: Colors.cyan,
-                      child: Center(
-                        child: Text('Value is updated to: $acceptedData1'),
-                      ),
-                    );
-                  },
-                  onAccept: (int data) {
-                    setState(() {
-                      acceptedData1 += data;
-                      myProducts.remove(data);
-                    });
-                  },
-                ),
-                DragTarget<int>(
-                  builder: (
-                    BuildContext context,
-                    List<dynamic> accepted,
-                    List<dynamic> rejected,
-                  ) {
-                    return Container(
-                      height: 100.0,
-                      width: 100.0,
-                      color: Colors.cyan,
-                      child: Center(
-                        child: Text('Value is updated to: $acceptedData2'),
-                      ),
-                    );
-                  },
-                  onAccept: (int data) {
-                    setState(() {
-                      acceptedData2 += data;
-                      myProducts.remove(data);
-                    });
-                  },
-                ),
-              ],
+            DragTarget<int>(
+              builder: (
+                BuildContext context,
+                List<dynamic> accepted,
+                List<dynamic> rejected,
+              ) {
+                return DragList(myList: falseList);
+              },
+              onWillAccept: (data) {
+                return !falseList.contains(data);
+              },
+              onAccept: (int data) {
+                setState(() {
+                  trueList.remove(data);
+                  initialList.remove(data);
+                  falseList.add(data);
+                });
+              },
             ),
           ],
         ));
+  }
+}
+
+class DragList extends StatefulWidget {
+  DragList({required this.myList, Key? key}) : super(key: key);
+
+  List<int> myList;
+
+  @override
+  State<DragList> createState() => _DragListState();
+}
+
+class _DragListState extends State<DragList> {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+        height: 150,
+        //(MediaQuery.of(context).size.width - 20) * 2.0 / 2.0, //270.0,
+        child: GridView.builder(
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 40,
+                childAspectRatio: 3 / 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10),
+            itemCount: widget.myList.length,
+            itemBuilder: (BuildContext ctx, index) {
+              int x = widget.myList[index];
+              return Draggable<int>(
+                // Data is the value this Draggable stores.
+                data: x,
+                childWhenDragging: const SizedBox(
+                  height: 100,
+                  width: 100,
+                ),
+                feedback: Container(
+                  height: 60.0,
+                  width: 60.0,
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey,
+                        offset: Offset(
+                          3.0,
+                          3.0,
+                        ),
+                        blurRadius: 3.0,
+                        spreadRadius: 1.0,
+                      ),
+                    ],
+                  ),
+                ),
+                child: Container(
+                  height: 100.0,
+                  width: 100.0,
+                  decoration: const BoxDecoration(
+                      color: Colors.orange, shape: BoxShape.circle),
+                  child: Center(
+                    child: Text('$x'),
+                  ),
+                ),
+              );
+            }),
+      ),
+    );
   }
 }
